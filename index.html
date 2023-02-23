@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.1/p5.js"></script>-->
+    <script src="https://kit.fontawesome.com/bda1b90a98.js" crossorigin="anonymous"></script>
+    <meta charset="utf-8" />
+
+    <style type="text/css">
+      body {
+        background-color: rgb(150, 150, 150);
+        background-image: linear-gradient(90deg, rgba(255, 153, 102, 1), rgba(51, 204, 204, 1));
+        font-family: Arial;
+        cursor: default;
+      }
+
+      #container {
+        display: grid;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+        width: 50%;
+      }
+
+      #timer {
+        grid-column: 1 / span 3;
+        font-size: 10em;
+      }
+
+      #startStudy, #startRecess, #pause {
+        cursor: pointer;
+      }
+      .fa-play {
+        display: none;
+      }
+      .tooltip-play {
+        display: none;
+      }
+      .fa-solid {
+        font-size: 4em;
+      }
+      .fa-solid:hover {
+        color: rgb(64, 64, 64);
+      }
+
+      .tooltip {
+        position: relative;
+        display: inline-block;
+      }
+
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: fit-content;
+        background-color: rgb(64, 64, 64);
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 5px;
+        position: absolute;
+        z-index: 1;
+        bottom: 150%;
+        left: 50%;
+        margin-left: -50%;
+      }
+
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+      }
+    </style>
+
+  </head>
+  <body>
+
+    <main>
+      <div id="container">
+        <div id="startStudy" class="tooltip" onclick="startStudySession()"><i class="fa-solid fa-book-open-reader"></i><span class="tooltiptext">Start study session</span></div>
+        <div id="pause" class="tooltip" onclick="pauseTimer()"><i class="fa-solid fa-pause"></i><span class="tooltiptext tooltip-pause">Pause timer</span><i class="fa-solid fa-play"></i><span class="tooltiptext tooltip-play">Resume timer</span></div>
+        <div id="startRecess" class="tooltip" onclick="startRecessSession()"><i class="fa-solid fa-gamepad"></i><span class="tooltiptext">Start recess session</span></div>
+        <div id="timer">00:00</div>
+      </div>
+    </main>
+
+    <script>
+
+      let state = 0; // 0 is studying, 1 is in recess
+      let paused = 0;
+      let studyTime = 10; // 60*25
+      let recessTime = 5; // 60*5
+
+      let timePassed = 55;
+      let curTime = 0;
+      let startTime = 0;
+      let pauseMarkTime = 0;
+      let playMarkTime = 0;
+      let setIntv;
+
+      let pauseTimes = [];
+      let clickPauseCount = 0;
+
+      let time = 0;
+      let curMinute = 0;
+      let curSecond = 0;
+
+      function startStudySession() {
+        time = 0;
+        paused = 0;
+        state = 0;
+        pauseMarkTime = 0;
+        playMarkTime = 0;
+        clickPauseCount = 0;
+        pauseTimes = [];
+        startTime = new Date();
+        setIntv = setInterval(timer, 1);
+      }
+
+      function startRecessSession() {
+        time = 0;
+        paused = 0;
+        state = 1;
+        pauseMarkTime = 0;
+        playMarkTime = 0;
+        clickPauseCount = 0;
+        pauseTimes = [];
+        startTime = new Date();
+        setIntv = setInterval(timer, 1);
+      }
+
+      function timer() {
+
+        if (paused === 0) {
+          curTime = new Date();
+        }
+        time = curTime.getTime() - startTime.getTime();
+        for (let i = 0; i < pauseTimes.length; i++) {
+          time -= pauseTimes[i];
+        }
+        time = Math.floor(time / 1000);
+
+        curMinute = Math.floor(time / 60);
+        curSecond = time % 60;
+
+        document.getElementById("timer").innerHTML = (curMinute < 10 ? "0" : "") + curMinute + ":" + (curSecond < 10 ? "0" : "") + curSecond;
+
+        if (state === 0) {
+          if (time >= studyTime) {
+            startRecessSession();
+          }
+        }
+        if (state === 1) {
+          if (time >= recessTime) {
+            startStudySession();
+          }
+        }
+      }
+
+      function pauseTimer() {
+        clickPauseCount++;
+
+        paused = 1 - paused;
+
+        if (paused === 1) {
+          pauseMarkTime = new Date();
+          document.getElementsByClassName("fa-pause")[0].style.display = "none";
+          document.getElementsByClassName("fa-play")[0].style.display = "inline-block";
+          document.getElementsByClassName("tooltip-play")[0].style.display = "inline-block";
+          document.getElementsByClassName("tooltip-pause")[0].style.display = "none";
+        } else {
+          playMarkTime = new Date();
+          document.getElementsByClassName("fa-pause")[0].style.display = "inline-block";
+          document.getElementsByClassName("fa-play")[0].style.display = "none";
+          document.getElementsByClassName("tooltip-pause")[0].style.display = "inline-block";
+          document.getElementsByClassName("tooltip-play")[0].style.display = "none";
+        }
+
+        if (clickPauseCount % 2 === 0) {
+          pauseTimes.push(playMarkTime.getTime() - pauseMarkTime.getTime());
+        }
+      }
+    </script>
+  </body>
+</html>
